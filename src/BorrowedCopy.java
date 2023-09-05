@@ -3,14 +3,12 @@ public class BorrowedCopy {
     private String borrowedCopy_status;
     private Book bookCopy;
     private Loan loan;
-
     public BorrowedCopy(int borrowedCopyId, String status, Book bookCopy, Loan loan) {
         this.borrowedCopy_id = borrowedCopyId;
         this.borrowedCopy_status = status;
         this.bookCopy = bookCopy;
         this.loan = loan;
     }
-
     public int getBorrowedCopyId() {
         return borrowedCopy_id;
     }
@@ -38,7 +36,6 @@ public class BorrowedCopy {
     public Loan getLoan() {
         return loan;
     }
-
     public void setLoan(Loan loan) {
         this.loan = loan;
     }
