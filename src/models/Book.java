@@ -1,3 +1,5 @@
+package models;
+
 public class Book {
     //attributes
     private int book_id;

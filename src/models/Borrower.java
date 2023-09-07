@@ -1,3 +1,5 @@
+package models;
+
 public class Borrower {
     private int borrower_id;
     private String borrower_lastName;

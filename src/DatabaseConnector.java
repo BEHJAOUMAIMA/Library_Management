@@ -26,6 +26,10 @@ public class DatabaseConnector {
         }
     }
 
+    public Connection getConnection() {
+        return connection;
+    }
+
     public void disconnect() {
         try {
             if (connection != null) {
@@ -35,5 +39,4 @@ public class DatabaseConnector {
             e.printStackTrace();
         }
     }
-
 }

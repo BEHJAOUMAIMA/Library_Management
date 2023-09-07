@@ -1,3 +1,5 @@
+package models;
+
 public class BorrowedCopy {
     private int borrowedCopy_id;
     private String borrowedCopy_status;
