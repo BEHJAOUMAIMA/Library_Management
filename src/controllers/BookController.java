@@ -3,10 +3,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 import models.Author;
+import models.Book;
 
 public class BookController {
     private Connection connection;
@@ -86,6 +88,37 @@ public class BookController {
             System.err.println("Erreur lors de l'ajout du livre : " + e.getMessage());
         }
     }
+    public List<Book> getAllAvailableBooks() throws SQLException {
+        List<Book> availableBooks = new ArrayList<>();
+
+        String query = "SELECT * FROM books WHERE book_state = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setBoolean(1, true);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int bookId = resultSet.getInt("book_id");
+                String title = resultSet.getString("book_title");
+                String description = resultSet.getString("book_description");
+                int ISBN = resultSet.getInt("book_ISBN");
+                int quantity = resultSet.getInt("book_quantity");
+                boolean bookState = resultSet.getBoolean("book_state");
+                int authorId = resultSet.getInt("author_id");
+
+                if (bookState) {
+                    Author author = authorController.getAuthorByAuthorId(authorId);
+                    Book book = new Book(bookId, title, description, ISBN, quantity, bookState, author);
+                    availableBooks.add(book);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des livres disponibles : " + e.getMessage());
+        }
+
+        return availableBooks;
+    }
+
 
 
 }

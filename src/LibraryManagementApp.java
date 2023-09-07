@@ -1,6 +1,8 @@
 import controllers.AuthorController;
 import controllers.BookController;
 import models.Author;
+import models.Book;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -27,7 +29,8 @@ public class LibraryManagementApp {
                     System.out.println("3. Mettre à jour un auteur");
                     System.out.println("4. Supprimer un auteur");
                     System.out.println("5. Ajouter un livre");
-                    System.out.println("6. Quitter");
+                    System.out.println("6. Afficher Les livres Disponible ");
+                    System.out.println("7. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -130,15 +133,36 @@ public class LibraryManagementApp {
                             boolean bookState = true;
                             bookController.addBook(bookTitle, bookDescription, bookISBN, bookQuantity, bookState, author);
                             break;
-
                         case 6:
+                            try {
+                                List<Book> availableBooks = bookController.getAllAvailableBooks();
+
+                                if (availableBooks.isEmpty()) {
+                                    System.out.println("Aucun livre disponible.");
+                                } else {
+                                    System.out.println("Livres disponibles :");
+                                    for (Book book : availableBooks) {
+                                        System.out.println("Titre : " + book.getBookTitle());
+                                        System.out.println("Description : " + book.getBookDescription());
+                                        System.out.println("ISBN : " + book.getBookISBN());
+                                        System.out.println("Quantité : " + book.getBookQuantity());
+                                        System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                        System.out.println();
+                                    }
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                            break;
+
+                        case 7:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 6);
+                }  while (choice != 7);
 
             } catch (Exception e) {
                 e.printStackTrace();

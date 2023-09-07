@@ -115,5 +115,26 @@ public class AuthorController {
 
         return null;
     }
+    public Author getAuthorByAuthorId(int authorId) throws SQLException {
+        Author author = null;
+
+        String query = "SELECT * FROM authors WHERE author_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, authorId);
+
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                String fullName = resultSet.getString("author_fullname");
+                String bio = resultSet.getString("author_bio");
+
+                author = new Author(authorId, fullName, bio);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération de l'auteur par ID : " + e.getMessage());
+        }
+
+        return author;
+    }
 
 }
