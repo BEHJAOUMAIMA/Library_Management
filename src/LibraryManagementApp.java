@@ -1,6 +1,6 @@
 import controllers.AuthorController;
+import controllers.BookController;
 import models.Author;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
@@ -8,32 +8,30 @@ import java.util.Scanner;
 
 public class LibraryManagementApp {
     public static void main(String[] args) {
-        // Créez une instance de DatabaseConnector en fournissant les détails de connexion
         DatabaseConnector dbConnector = new DatabaseConnector("jdbc:mysql://localhost:3306/library_management", "root", "");
 
-        // Établissez la connexion à la base de données
         if (dbConnector.connect()) {
             System.out.println("Connexion réussie à la base de données.");
 
-            // Créez une instance de AuthorController en fournissant la connexion
             AuthorController authorController = new AuthorController(dbConnector.getConnection());
+            BookController bookController = new BookController(dbConnector.getConnection(), authorController);
+
 
             try {
                 Scanner scanner = new Scanner(System.in);
                 int choice;
                 do {
-                    // Afficher le menu
                     System.out.println("Menu :");
                     System.out.println("1. Ajouter un auteur");
                     System.out.println("2. Afficher tous les auteurs");
                     System.out.println("3. Mettre à jour un auteur");
                     System.out.println("4. Supprimer un auteur");
-                    System.out.println("5. Quitter");
+                    System.out.println("5. Ajouter un livre");
+                    System.out.println("6. Quitter");
                     System.out.print("Choisissez une option : ");
 
-                    // Lire le choix de l'utilisateur
                     choice = scanner.nextInt();
-                    scanner.nextLine(); // Consommer la ligne en trop
+                    scanner.nextLine();
 
                     switch (choice) {
                         case 1:
@@ -61,7 +59,7 @@ public class LibraryManagementApp {
                         case 3:
                             System.out.println("Entrez l'ID de l'auteur que vous souhaitez mettre à jour :");
                             int authorIdToUpdate = scanner.nextInt();
-                            scanner.nextLine(); // Consommer la ligne en trop
+                            scanner.nextLine();
 
                             System.out.println("Entrez le nouveau nom complet de l'auteur :");
                             String newFullName = scanner.nextLine();
@@ -88,13 +86,59 @@ public class LibraryManagementApp {
                             }
                             break;
                         case 5:
+                            System.out.println("Ajouter un livre :");
+                            List<Author> authors = authorController.getAllAuthors();
+                            System.out.println("Liste des auteurs disponibles :");
+
+                            for (int i = 0; i < authors.size(); i++) {
+                                System.out.println((i + 1) + ". " + authors.get(i).getAuthorFullName());
+                            }
+
+                            System.out.println("Entrez le numéro de l'auteur ou 0 pour créer un nouvel auteur :");
+                            int authorChoice = scanner.nextInt();
+                            scanner.nextLine();
+
+                            Author author;
+
+                            if (authorChoice == 0) {
+                                System.out.println("Entrez le nom complet de l'auteur :");
+                                String authorFullName = scanner.nextLine();
+                                System.out.println("Entrez la biographie de l'auteur :");
+                                String authorBio = scanner.nextLine();
+
+                                authorController.addAuthor(authorFullName, authorBio);
+
+                                author = authorController.getAuthorByFullName(authorFullName);
+                            } else if (authorChoice > 0 && authorChoice <= authors.size()) {
+                                author = authors.get(authorChoice - 1);
+                            } else {
+                                System.out.println("Choix invalide. Veuillez choisir un numéro d'auteur valide.");
+                                continue; // Revenir au menu principal.
+                            }
+
+                            System.out.println("Entrez le titre du livre :");
+                            String bookTitle = scanner.nextLine();
+                            System.out.println("Entrez la description du livre :");
+                            String bookDescription = scanner.nextLine();
+                            System.out.println("Entrez l'ISBN du livre :");
+                            int bookISBN = scanner.nextInt();
+                            scanner.nextLine();
+                            System.out.println("Entrez la quantité du livre :");
+                            int bookQuantity = scanner.nextInt();
+                            scanner.nextLine();
+
+                            boolean bookState = true;
+                            bookController.addBook(bookTitle, bookDescription, bookISBN, bookQuantity, bookState, author);
+                            break;
+
+                        case 6:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                } while (choice != 5);
+                }  while (choice != 6);
 
             } catch (Exception e) {
                 e.printStackTrace();

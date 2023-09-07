@@ -41,6 +41,11 @@ public class AuthorController {
                 authors.add(author);
             }
         }
+
+        if (authors.isEmpty()) {
+            System.out.println("Aucun auteur trouvé dans la base de données.");
+        }
+
         return authors;
     }
     public void updateAuthor(int id, String fullName, String bio) throws SQLException {
@@ -93,6 +98,22 @@ public class AuthorController {
             statement.setInt(1, id);
             statement.executeUpdate();
         }
+    }
+    public Author getAuthorByFullName(String fullName) throws SQLException {
+        String query = "SELECT * FROM authors WHERE author_fullname = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, fullName);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    int authorId = resultSet.getInt("author_id");
+                    String bio = resultSet.getString("author_bio");
+                    return new Author(authorId, fullName, bio);
+                }
+            }
+        }
+
+        return null;
     }
 
 }
