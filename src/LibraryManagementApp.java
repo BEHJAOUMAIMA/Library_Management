@@ -30,7 +30,8 @@ public class LibraryManagementApp {
                     System.out.println("4. Supprimer un auteur");
                     System.out.println("5. Ajouter un livre");
                     System.out.println("6. Afficher Les livres Disponible ");
-                    System.out.println("7. Quitter");
+                    System.out.println("7. Rechercher un livre ");
+                    System.out.println("8. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -154,15 +155,61 @@ public class LibraryManagementApp {
                                 e.printStackTrace();
                             }
                             break;
-
                         case 7:
+                            System.out.println("Recherche de livres par titre ou auteur :");
+                            do {
+                                System.out.print("Entrez le titre ou le nom de l'auteur : ");
+                                String searchTerm = scanner.nextLine();
+
+                                List<Book> matchingBooks = bookController.searchBooks(searchTerm);
+
+                                if (matchingBooks == null) {
+                                    System.out.println("Aucun résultat trouvé pour la recherche : " + searchTerm);
+                                    System.out.println("Voulez-vous réessayer ? (oui/non)");
+                                    String retryChoice = scanner.nextLine();
+                                    if (!retryChoice.equalsIgnoreCase("oui")) {
+                                        break;
+                                    }
+                                } else {
+                                    if (searchTerm.equalsIgnoreCase(searchTerm)) {
+                                        System.out.println("Livres de l'auteur " + searchTerm + " :");
+                                        for (Book book : matchingBooks) {
+                                            System.out.println("Titre : " + book.getBookTitle());
+                                            System.out.println("Description : " + book.getBookDescription());
+                                            System.out.println("ISBN : " + book.getBookISBN());
+                                            System.out.println("Quantité : " + book.getBookQuantity());
+                                            System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                            System.out.println();
+                                        }
+                                    } else {
+                                        System.out.println("Livres correspondants :");
+                                        for (Book book : matchingBooks) {
+                                            System.out.println("Titre : " + book.getBookTitle());
+                                            System.out.println("Description : " + book.getBookDescription());
+                                            System.out.println("ISBN : " + book.getBookISBN());
+                                            System.out.println("Quantité : " + book.getBookQuantity());
+                                            System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                            System.out.println();
+                                        }
+                                    }
+
+                                    System.out.println("Voulez-vous réessayer ? (oui/non)");
+                                    String retryChoice = scanner.nextLine();
+                                    if (!retryChoice.equalsIgnoreCase("oui")) {
+                                        break;
+                                    }
+                                }
+                            } while (true);
+                            break;
+
+                        case 8:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 7);
+                }  while (choice != 8);
 
             } catch (Exception e) {
                 e.printStackTrace();

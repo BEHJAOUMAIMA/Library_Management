@@ -119,6 +119,39 @@ public class BookController {
         return availableBooks;
     }
 
+    public List<Book> searchBooks(String searchTerm) throws SQLException {
+        List<Book> matchingBooks = new ArrayList<>();
+
+        String query = "SELECT b.* " +
+                "FROM books b " +
+                "INNER JOIN authors a ON b.author_id = a.author_id " +
+                "WHERE b.book_title LIKE ? OR a.author_fullname LIKE ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, "%" + searchTerm + "%");
+            statement.setString(2, "%" + searchTerm + "%");
+
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                int bookId = resultSet.getInt("book_id");
+                String title = resultSet.getString("book_title");
+                String description = resultSet.getString("book_description");
+                int ISBN = resultSet.getInt("book_ISBN");
+                int quantity = resultSet.getInt("book_quantity");
+                boolean bookState = resultSet.getBoolean("book_state");
+                int authorId = resultSet.getInt("author_id");
+
+                Author author = authorController.getAuthorByAuthorId(authorId);
+                Book book = new Book(bookId, title, description, ISBN, quantity, bookState, author);
+                matchingBooks.add(book);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la recherche de livres : " + e.getMessage());
+        }
+
+        return matchingBooks.isEmpty() ? null : matchingBooks;
+    }
 
 
 }
