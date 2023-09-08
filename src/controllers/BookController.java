@@ -106,7 +106,7 @@ public class BookController {
                 String bookState = resultSet.getString("book_state");
                 int authorId = resultSet.getInt("author_id");
 
-                if ("disponible".equals(bookState)) { // Utilisez equals ici
+                if ("disponible".equals(bookState)) {
                     Author author = authorController.getAuthorByAuthorId(authorId);
                     Book book = new Book(bookId, title, description, ISBN, quantity, bookState, author);
                     availableBooks.add(book);

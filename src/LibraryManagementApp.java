@@ -1,7 +1,9 @@
 import controllers.AuthorController;
 import controllers.BookController;
+import controllers.BorrowerController;
 import models.Author;
 import models.Book;
+import models.Borrower;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -17,7 +19,7 @@ public class LibraryManagementApp {
 
             AuthorController authorController = new AuthorController(dbConnector.getConnection());
             BookController bookController = new BookController(dbConnector.getConnection(), authorController);
-
+            BorrowerController BorrowerController = new BorrowerController(dbConnector.getConnection());
 
             try {
                 Scanner scanner = new Scanner(System.in);
@@ -33,7 +35,10 @@ public class LibraryManagementApp {
                     System.out.println("7. Rechercher un livre ");
                     System.out.println("8. Modifier un livre ");
                     System.out.println("9. Supprimer un livre ");
-                    System.out.println("10. Quitter");
+                    System.out.println("10. Ajouter un Emprunteur");
+                    System.out.println("11. Afficher les Emprunteurs");
+                    System.out.println("12. Modifier les informations d'un emprunteur");
+                    System.out.println("13. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -220,13 +225,86 @@ public class LibraryManagementApp {
                             bookController.deleteBook(deleteISBN);
                             break;
                         case 10:
+                            System.out.println("Ajouter un emprunteur :");
+                            String lastName, firstName, email, telephone, CIN;
+                            int memberNumber;
+                            do {
+                                System.out.println("Numéro de membre (doit être unique) : ");
+                                memberNumber = scanner.nextInt();
+                                scanner.nextLine();
+                                if (BorrowerController.isMemberNumberUnique(memberNumber)) {
+                                    break;
+                                } else {
+                                    System.out.println("Ce numéro de membre existe déjà. Veuillez en choisir un autre.");
+                                }
+                            } while (true);
+
+                                System.out.println("Nom de famille : ");
+                                lastName = scanner.nextLine();
+                                System.out.println("Prénom : ");
+                                firstName = scanner.nextLine();
+                                System.out.println("Email : ");
+                                email = scanner.nextLine();
+                                System.out.println("Téléphone : ");
+                                telephone = scanner.nextLine();
+                                System.out.println("CIN : ");
+                                CIN = scanner.nextLine();
+
+                                BorrowerController.addBorrower(lastName, firstName, email, telephone, CIN, memberNumber);
+                            break;
+                        case 11:
+                            try {
+                                List<Borrower> borrowers = BorrowerController.getAllBorrowers();
+
+                                if (borrowers.isEmpty()) {
+                                    System.out.println("Aucun emprunteur enregistré.");
+                                } else {
+                                    System.out.println("Liste des emprunteurs :");
+                                    for (Borrower borrower : borrowers) {
+                                        System.out.println("ID : " + borrower.getBorrowerId());
+                                        System.out.println("Nom : " + borrower.getBorrowerLastName());
+                                        System.out.println("Prénom : " + borrower.getBorrowerFirstName());
+                                        System.out.println("Email : " + borrower.getBorrowerEmail());
+                                        System.out.println("Téléphone : " + borrower.getBorrowerTelephone());
+                                        System.out.println("CIN : " + borrower.getBorrowerCIN());
+                                        System.out.println("Numéro de membre : " + borrower.getMemberNumber());
+                                        System.out.println();
+                                    }
+                                }
+                            } catch (SQLException e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                        case 12:
+                            System.out.print("Entrez le numéro de membre de l'emprunteur que vous souhaitez mettre à jour : ");
+                            int memberNumberToUpdate = scanner.nextInt();
+                            scanner.nextLine(); // Pour consommer la nouvelle ligne restante
+
+                            System.out.print("Nouveau nom de famille (laissez vide pour conserver la valeur actuelle) : ");
+                            String newLastName = scanner.nextLine();
+                            System.out.print("Nouveau prénom (laissez vide pour conserver la valeur actuelle) : ");
+                            String newFirstName = scanner.nextLine();
+                            System.out.print("Nouvelle adresse e-mail (laissez vide pour conserver la valeur actuelle) : ");
+                            String newEmail = scanner.nextLine();
+                            System.out.print("Nouveau numéro de téléphone (laissez vide pour conserver la valeur actuelle) : ");
+                            String newTelephone = scanner.nextLine();
+                            System.out.print("Nouveau CIN (laissez vide pour conserver la valeur actuelle) : ");
+                            String newCIN = scanner.nextLine();
+
+                            try {
+                                BorrowerController.updateBorrower(memberNumberToUpdate, newLastName, newFirstName, newEmail, newTelephone, newCIN);
+                            } catch (SQLException e) {
+                                System.err.println("Erreur lors de la mise à jour de l'emprunteur : " + e.getMessage());
+                            }
+                            break;
+                        case 13:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 10);
+                }  while (choice != 13);
 
             } catch (Exception e) {
                 e.printStackTrace();
