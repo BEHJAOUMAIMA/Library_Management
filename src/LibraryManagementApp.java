@@ -31,7 +31,8 @@ public class LibraryManagementApp {
                     System.out.println("5. Ajouter un livre");
                     System.out.println("6. Afficher Les livres Disponible ");
                     System.out.println("7. Rechercher un livre ");
-                    System.out.println("8. Quitter");
+                    System.out.println("8. Modifier un livre ");
+                    System.out.println("9. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -201,15 +202,22 @@ public class LibraryManagementApp {
                                 }
                             } while (true);
                             break;
-
                         case 8:
+                            System.out.println("Mettre à jour un livre :");
+                            System.out.println("Entrez l'ISBN du livre que vous souhaitez mettre à jour :");
+                            int updateISBN = scanner.nextInt();
+                            scanner.nextLine();
+
+                            bookController.updateBook(updateISBN);
+                            break;
+                        case 9:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 8);
+                }  while (choice != 9);
 
             } catch (Exception e) {
                 e.printStackTrace();

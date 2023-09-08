@@ -118,7 +118,6 @@ public class BookController {
 
         return availableBooks;
     }
-
     public List<Book> searchBooks(String searchTerm) throws SQLException {
         List<Book> matchingBooks = new ArrayList<>();
 
@@ -152,6 +151,141 @@ public class BookController {
 
         return matchingBooks.isEmpty() ? null : matchingBooks;
     }
+
+    public void updateBook(int ISBN) throws SQLException {
+        Scanner scanner = new Scanner(System.in);
+
+        String queryCheckISBN = "SELECT * FROM books WHERE book_ISBN = ?";
+        try (PreparedStatement checkISBNStatement = connection.prepareStatement(queryCheckISBN)) {
+            checkISBNStatement.setInt(1, ISBN);
+            ResultSet resultSet = checkISBNStatement.executeQuery();
+
+            if (!resultSet.next()) {
+                System.out.println("Aucun livre avec cet ISBN n'a été trouvé.");
+                return;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la vérification de l'ISBN : " + e.getMessage());
+            return;
+        }
+
+        String queryGetBookInfo = "SELECT * FROM books WHERE book_ISBN = ?";
+        try (PreparedStatement getBookInfoStatement = connection.prepareStatement(queryGetBookInfo)) {
+            getBookInfoStatement.setInt(1, ISBN);
+            ResultSet resultSet = getBookInfoStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String currentTitle = resultSet.getString("book_title");
+                String currentDescription = resultSet.getString("book_description");
+                int currentQuantity = resultSet.getInt("book_quantity");
+                int authorId = resultSet.getInt("author_id");
+
+                // Récupère le nom complet de l'auteur actuel.
+                AuthorController authorController = new AuthorController(connection);
+                Author currentAuthor = authorController.getAuthorById(authorId);
+                String currentAuthorFullName = currentAuthor.getAuthorFullName();
+
+                System.out.println("Informations actuelles du livre (laissez vide pour conserver les valeurs actuelles) :");
+                System.out.println("Titre actuel : " + currentTitle);
+                System.out.println("Description actuelle : " + currentDescription);
+                System.out.println("Quantité actuelle : " + currentQuantity);
+                System.out.println("Auteur actuel : " + currentAuthorFullName);
+
+                System.out.println("Entrez le nouveau titre du livre (ou laissez vide) :");
+                String newTitle = scanner.nextLine();
+                if (newTitle.isEmpty()) {
+                    newTitle = currentTitle;
+                }
+
+                System.out.println("Entrez la nouvelle description du livre (ou laissez vide) :");
+                String newDescription = scanner.nextLine();
+                if (newDescription.isEmpty()) {
+                    newDescription = currentDescription;
+                }
+
+                System.out.println("Entrez la nouvelle quantité du livre (ou laissez vide pour conserver la quantité actuelle) :");
+                String quantityInput = scanner.nextLine();
+                int newQuantity = currentQuantity;
+
+                if (!quantityInput.isEmpty()) {
+                    try {
+                        newQuantity = Integer.parseInt(quantityInput);
+                        if (newQuantity <= 0) {
+                            System.out.println("La quantité doit être supérieure à zéro. La quantité reste inchangée.");
+                            newQuantity = currentQuantity;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("La quantité entrée n'est pas valide. La quantité reste inchangée.");
+                    }
+                }
+
+                System.out.println("Voulez-vous également mettre à jour l'auteur de ce livre ? (oui/non)");
+                String updateAuthorChoice = scanner.nextLine();
+
+                if (updateAuthorChoice.equalsIgnoreCase("oui")) {
+                    List<Author> authors = authorController.getAllAuthors();
+                    System.out.println("Liste des auteurs disponibles :");
+
+                    for (int i = 0; i < authors.size(); i++) {
+                        System.out.println((i + 1) + ". " + authors.get(i).getAuthorFullName());
+                    }
+
+                    System.out.println("Entrez le numéro du nouvel auteur ou 0 pour conserver l'auteur actuel :");
+                    int newAuthorChoice = scanner.nextInt();
+                    scanner.nextLine();
+
+                    Author newAuthor;
+
+                    if (newAuthorChoice == 0) {
+                        newAuthor = authorController.getAuthorByFullName(currentAuthorFullName);
+                    } else if (newAuthorChoice > 0 && newAuthorChoice <= authors.size()) {
+                        newAuthor = authors.get(newAuthorChoice - 1);
+                    } else {
+                        System.out.println("Choix invalide. L'auteur reste inchangé.");
+                        return;
+                    }
+
+                    String queryUpdateAuthor = "UPDATE books SET author_id = ? WHERE book_ISBN = ?";
+                    try (PreparedStatement updateAuthorStatement = connection.prepareStatement(queryUpdateAuthor)) {
+                        updateAuthorStatement.setInt(1, newAuthor.getAuthorId());
+                        updateAuthorStatement.setInt(2, ISBN);
+
+                        int rowsUpdated = updateAuthorStatement.executeUpdate();
+
+                        if (rowsUpdated > 0) {
+                            System.out.println("L'auteur du livre a été mis à jour avec succès !");
+                        } else {
+                            System.out.println("Échec de la mise à jour de l'auteur du livre.");
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Erreur lors de la mise à jour de l'auteur du livre : " + e.getMessage());
+                    }
+                }
+
+                String queryUpdateBook = "UPDATE books SET book_title = ?, book_description = ?, book_quantity = ? WHERE book_ISBN = ?";
+                try (PreparedStatement updateBookStatement = connection.prepareStatement(queryUpdateBook)) {
+                    updateBookStatement.setString(1, newTitle);
+                    updateBookStatement.setString(2, newDescription);
+                    updateBookStatement.setInt(3, newQuantity);
+                    updateBookStatement.setInt(4, ISBN);
+
+                    int rowsUpdated = updateBookStatement.executeUpdate();
+
+                    if (rowsUpdated > 0) {
+                        System.out.println("Le livre a été mis à jour avec succès !");
+                    } else {
+                        System.out.println("Échec de la mise à jour du livre.");
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Erreur lors de la mise à jour du livre : " + e.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des informations du livre : " + e.getMessage());
+        }
+    }
+
+
 
 
 }

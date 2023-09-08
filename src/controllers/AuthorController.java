@@ -136,5 +136,41 @@ public class AuthorController {
 
         return author;
     }
+    public Author getAuthor(String authorName) throws SQLException {
+        String query = "SELECT * FROM authors WHERE author_fullname = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, authorName);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                int authorId = resultSet.getInt("author_id");
+                String fullName = resultSet.getString("author_full_name");
+                String bio = resultSet.getString("author_bio");
+                return new Author(authorId, fullName, bio);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération de l'auteur par nom : " + e.getMessage());
+        }
+        return null;
+    }
+    public Author getAuthorById(int authorId) throws SQLException {
+        String query = "SELECT * FROM authors WHERE author_id = ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, authorId);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return extractAuthorFromResultSet(resultSet);
+            }
+        }
+        return null; // Aucun auteur trouvé avec cet ID
+    }
+    private Author extractAuthorFromResultSet(ResultSet resultSet) throws SQLException {
+        int authorId = resultSet.getInt("author_id");
+        String fullName = resultSet.getString("author_fullname");
+        String bio = resultSet.getString("author_bio");
+
+        return new Author(authorId, fullName, bio);
+    }
 
 }
