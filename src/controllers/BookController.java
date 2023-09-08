@@ -18,7 +18,7 @@ public class BookController {
         this.connection = connection;
         this.authorController = authorController;
     }
-    public void addBook(String title, String description, int ISBN, int quantity, boolean bookState, Author author) throws SQLException {
+    public void addBook(String title, String description, int ISBN, int quantity, String bookState, Author author) throws SQLException {
         Scanner scanner = new Scanner(System.in);
         Author existingAuthor = authorController.getAuthorByFullName(author.getAuthorFullName());
 
@@ -74,7 +74,7 @@ public class BookController {
             statement.setString(2, description);
             statement.setInt(3, ISBN);
             statement.setInt(4, quantity);
-            statement.setBoolean(5, bookState);
+            statement.setString(5, bookState);
             statement.setInt(6, existingAuthor.getAuthorId());
 
             int rowsInserted = statement.executeUpdate();
@@ -93,7 +93,7 @@ public class BookController {
 
         String query = "SELECT * FROM books WHERE book_state = ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setBoolean(1, true);
+            statement.setString(1, "disponible");
 
             ResultSet resultSet = statement.executeQuery();
 
@@ -103,10 +103,10 @@ public class BookController {
                 String description = resultSet.getString("book_description");
                 int ISBN = resultSet.getInt("book_ISBN");
                 int quantity = resultSet.getInt("book_quantity");
-                boolean bookState = resultSet.getBoolean("book_state");
+                String bookState = resultSet.getString("book_state");
                 int authorId = resultSet.getInt("author_id");
 
-                if (bookState) {
+                if ("disponible".equals(bookState)) { // Utilisez equals ici
                     Author author = authorController.getAuthorByAuthorId(authorId);
                     Book book = new Book(bookId, title, description, ISBN, quantity, bookState, author);
                     availableBooks.add(book);
@@ -138,7 +138,7 @@ public class BookController {
                 String description = resultSet.getString("book_description");
                 int ISBN = resultSet.getInt("book_ISBN");
                 int quantity = resultSet.getInt("book_quantity");
-                boolean bookState = resultSet.getBoolean("book_state");
+                String bookState = resultSet.getString("book_state");
                 int authorId = resultSet.getInt("author_id");
 
                 Author author = authorController.getAuthorByAuthorId(authorId);
@@ -180,9 +180,8 @@ public class BookController {
                 int currentQuantity = resultSet.getInt("book_quantity");
                 int authorId = resultSet.getInt("author_id");
 
-                // Récupère le nom complet de l'auteur actuel.
                 AuthorController authorController = new AuthorController(connection);
-                Author currentAuthor = authorController.getAuthorById(authorId);
+                Author currentAuthor = authorController.getAuthorByAuthorId(authorId);
                 String currentAuthorFullName = currentAuthor.getAuthorFullName();
 
                 System.out.println("Informations actuelles du livre (laissez vide pour conserver les valeurs actuelles) :");
@@ -285,7 +284,36 @@ public class BookController {
         }
     }
 
+    public void deleteBook(int ISBN) throws SQLException {
+        String queryCheckISBN = "SELECT * FROM books WHERE book_ISBN = ?";
+        try (PreparedStatement checkISBNStatement = connection.prepareStatement(queryCheckISBN)) {
+            checkISBNStatement.setInt(1, ISBN);
+            ResultSet resultSet = checkISBNStatement.executeQuery();
 
+            if (!resultSet.next()) {
+                System.out.println("Aucun livre avec cet ISBN n'a été trouvé.");
+                return;
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la vérification de l'ISBN : " + e.getMessage());
+            return;
+        }
+
+        String queryUpdateState = "UPDATE books SET book_state = 'deleted' WHERE book_ISBN = ?";
+        try (PreparedStatement updateStateStatement = connection.prepareStatement(queryUpdateState)) {
+            updateStateStatement.setInt(1, ISBN);
+
+            int rowsUpdated = updateStateStatement.executeUpdate();
+
+            if (rowsUpdated > 0) {
+                System.out.println("Le livre a été  supprimé avec succès !");
+            } else {
+                System.out.println("Échec de la suppression du livre.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la mise à jour de l'état du livre : " + e.getMessage());
+        }
+    }
 
 
 }

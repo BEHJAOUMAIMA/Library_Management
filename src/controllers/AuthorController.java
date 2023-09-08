@@ -153,23 +153,11 @@ public class AuthorController {
         }
         return null;
     }
-    public Author getAuthorById(int authorId) throws SQLException {
-        String query = "SELECT * FROM authors WHERE author_id = ?";
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, authorId);
-            ResultSet resultSet = statement.executeQuery();
 
-            if (resultSet.next()) {
-                return extractAuthorFromResultSet(resultSet);
-            }
-        }
-        return null; // Aucun auteur trouvé avec cet ID
-    }
     private Author extractAuthorFromResultSet(ResultSet resultSet) throws SQLException {
         int authorId = resultSet.getInt("author_id");
         String fullName = resultSet.getString("author_fullname");
         String bio = resultSet.getString("author_bio");
-
         return new Author(authorId, fullName, bio);
     }
 

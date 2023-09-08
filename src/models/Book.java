@@ -7,11 +7,11 @@ public class Book {
     private String book_description;
     private int book_ISBN;
     private int book_quantity;
-    private boolean book_state;
+    private String book_state;
     private Author author;
 
     //construct
-    public Book(int book_id, String book_title, String book_description, int book_ISBN, int book_quantity, boolean book_state, Author author) {
+    public Book(int book_id, String book_title, String book_description, int book_ISBN, int book_quantity, String book_state, Author author) {
         this.book_id = book_id;
         this.book_title = book_title;
         this.book_description = book_description;
@@ -52,10 +52,10 @@ public class Book {
     public void setBookQuantity(int quantity) {
         this.book_quantity = quantity;
     }
-    public boolean getBookState() {
+    public String getBookState() {
         return book_state;
     }
-   public void setBookState(boolean state){
+   public void setBookState(String state){
         this.book_state = state;
    }
     public Author getBookAuthor() {

@@ -32,7 +32,8 @@ public class LibraryManagementApp {
                     System.out.println("6. Afficher Les livres Disponible ");
                     System.out.println("7. Rechercher un livre ");
                     System.out.println("8. Modifier un livre ");
-                    System.out.println("9. Quitter");
+                    System.out.println("9. Supprimer un livre ");
+                    System.out.println("10. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -118,7 +119,7 @@ public class LibraryManagementApp {
                                 author = authors.get(authorChoice - 1);
                             } else {
                                 System.out.println("Choix invalide. Veuillez choisir un numéro d'auteur valide.");
-                                continue; // Revenir au menu principal.
+                                continue;
                             }
 
                             System.out.println("Entrez le titre du livre :");
@@ -132,7 +133,7 @@ public class LibraryManagementApp {
                             int bookQuantity = scanner.nextInt();
                             scanner.nextLine();
 
-                            boolean bookState = true;
+                            String bookState = "disponible";
                             bookController.addBook(bookTitle, bookDescription, bookISBN, bookQuantity, bookState, author);
                             break;
                         case 6:
@@ -211,13 +212,21 @@ public class LibraryManagementApp {
                             bookController.updateBook(updateISBN);
                             break;
                         case 9:
+                            System.out.println("Supprimer un Livre :");
+                            System.out.println("Entrez l'ISBN du livre que vous souhaitez supprimé :");
+                            int deleteISBN = scanner.nextInt();
+                            scanner.nextLine();
+
+                            bookController.deleteBook(deleteISBN);
+                            break;
+                        case 10:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 9);
+                }  while (choice != 10);
 
             } catch (Exception e) {
                 e.printStackTrace();
