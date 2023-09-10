@@ -138,5 +138,45 @@ public class LoanController {
         return borrowedBooksDetails;
     }
 
+    public boolean returnBorrowedBook(int isbn, int memberNumber) throws SQLException {
+        String selectBorrowedCopyQuery = "SELECT bc.borrowedCopy_id, bc.book_id, l.borrower_id " +
+                "FROM borrowedCopies bc " +
+                "INNER JOIN books b ON bc.book_id = b.book_id " +
+                "INNER JOIN loans l ON bc.loan_id = l.loan_id " +
+                "INNER JOIN borrowers br ON l.borrower_id = br.borrower_id " +
+                "WHERE bc.borrowedCopy_status = 'Emprunté' AND b.book_ISBN = ? AND br.member_number = ?";
+
+        String updateBorrowedCopyQuery = "UPDATE borrowedCopies SET borrowedCopy_status = 'Returned' WHERE borrowedCopy_id = ?";
+
+        String updateBookQuantityQuery = "UPDATE books SET book_quantity = book_quantity + 1 WHERE book_id = ?";
+
+        try {
+            PreparedStatement selectBorrowedCopyStatement = connection.prepareStatement(selectBorrowedCopyQuery);
+            selectBorrowedCopyStatement.setInt(1, isbn);
+            selectBorrowedCopyStatement.setInt(2, memberNumber);
+            ResultSet resultSet = selectBorrowedCopyStatement.executeQuery();
+
+            if (resultSet.next()) {
+                int borrowedCopyId = resultSet.getInt("borrowedCopy_id");
+                int bookId = resultSet.getInt("book_id");
+
+                PreparedStatement updateBorrowedCopyStatement = connection.prepareStatement(updateBorrowedCopyQuery);
+                updateBorrowedCopyStatement.setInt(1, borrowedCopyId);
+                int borrowedCopyUpdated = updateBorrowedCopyStatement.executeUpdate();
+
+                PreparedStatement updateBookQuantityStatement = connection.prepareStatement(updateBookQuantityQuery);
+                updateBookQuantityStatement.setInt(1, bookId);
+                int bookQuantityUpdated = updateBookQuantityStatement.executeUpdate();
+
+                return borrowedCopyUpdated > 0 && bookQuantityUpdated > 0;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
+    }
+
+
 
 }

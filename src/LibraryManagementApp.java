@@ -45,7 +45,8 @@ public class LibraryManagementApp {
                     System.out.println("12. Modifier les informations d'un emprunteur");
                     System.out.println("13. Emprunter un livre");
                     System.out.println("14. Afficher Les details des livres Empruntés ");
-                    System.out.println("15. Quitter");
+                    System.out.println("15. Retourner un livre ");
+                    System.out.println("16. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -376,15 +377,36 @@ public class LibraryManagementApp {
                                 }
                             }
                             break;
-
                         case 15:
+                            System.out.print("Entrez l'ISBN du livre que vous souhaitez retourner : ");
+                            int isbnToReturn = scanner.nextInt();
+                            scanner.nextLine();
+
+                            System.out.print("Entrez le numéro de membre de l'emprunteur : ");
+                            memberNumber = scanner.nextInt();
+                            scanner.nextLine();
+
+                            try {
+                                boolean success = LoanController.returnBorrowedBook(isbnToReturn, memberNumber);
+
+                                if (success) {
+                                    System.out.println("Le livre a été retourné avec succès.");
+                                } else {
+                                    System.out.println("Échec du retour du livre. Vérifiez l'ISBN ou le numéro de membre.");
+                                }
+                            } catch (SQLException e) {
+                                System.err.println("Erreur lors du retour du livre : " + e.getMessage());
+                                e.printStackTrace();
+                            }
+                            break;
+                        case 16:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 15);
+                }  while (choice != 16);
 
             } catch (Exception e) {
                 e.printStackTrace();
