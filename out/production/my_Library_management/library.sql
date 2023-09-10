@@ -19,3 +19,17 @@ BEGIN
     UPDATE books SET book_quantity = book_quantity - 1 WHERE book_id = NEW.book_id;
 END IF;
 END;
+
+
+
+CREATE EVENT CheckLoanStatus
+ON SCHEDULE EVERY 2 HOUR
+DO
+BEGIN
+UPDATE borrowedCopies bc
+    INNER JOIN loans l ON bc.loan_id = l.loan_id
+    SET bc.borrowedCopy_status = 'Losted'
+WHERE l.return_date < NOW();
+END;
+
+
