@@ -44,7 +44,8 @@ public class LibraryManagementApp {
                     System.out.println("11. Afficher les Emprunteurs");
                     System.out.println("12. Modifier les informations d'un emprunteur");
                     System.out.println("13. Emprunter un livre");
-                    System.out.println("14. Quitter");
+                    System.out.println("14. Afficher Les details des livres Empruntés ");
+                    System.out.println("15. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -284,7 +285,7 @@ public class LibraryManagementApp {
                         case 12:
                             System.out.print("Entrez le numéro de membre de l'emprunteur que vous souhaitez mettre à jour : ");
                             int memberNumberToUpdate = scanner.nextInt();
-                            scanner.nextLine(); // Pour consommer la nouvelle ligne restante
+                            scanner.nextLine();
 
                             System.out.print("Nouveau nom de famille (laissez vide pour conserver la valeur actuelle) : ");
                             String newLastName = scanner.nextLine();
@@ -364,13 +365,26 @@ public class LibraryManagementApp {
                            
                             break;
                         case 14:
+                            List<String> borrowedBooksDetails = LoanController.getBorrowedBooksDetails();
+
+                            if (borrowedBooksDetails.isEmpty()) {
+                                System.out.println("Aucun livre emprunté pour le moment.");
+                            } else {
+                                System.out.println("Livres empruntés avec les informations des emprunteurs :");
+                                for (String details : borrowedBooksDetails) {
+                                    System.out.println(details);
+                                }
+                            }
+                            break;
+
+                        case 15:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 14);
+                }  while (choice != 15);
 
             } catch (Exception e) {
                 e.printStackTrace();

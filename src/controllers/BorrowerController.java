@@ -161,12 +161,10 @@ public class BorrowerController {
                 String telephone = resultSet.getString("borrower_telephone");
                 String CIN = resultSet.getString("borrower_CIN");
 
-                // Créez et retournez un objet Borrower
                 return new Borrower(borrowerId, lastName, firstName, email, telephone, CIN, numeroMembre);
             }
         }
 
-        // Si aucun emprunteur n'a été trouvé, renvoyez null
         return null;
     }
 
