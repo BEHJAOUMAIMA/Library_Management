@@ -6,6 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
 
 public class LoanController {
     private Connection connection;
@@ -176,6 +177,94 @@ public class LoanController {
             throw e;
         }
     }
+
+    public int getAvailableBooksCount() {
+        String query = "SELECT COUNT(*) AS count FROM books WHERE book_state = 'disponible'";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("count");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des statistiques des livres disponibles : " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+    public int getBorrowedBooksCount() {
+        return getBooksCountByStatus("Emprunté");
+    }
+
+    public int getReturnedBooksCount() {
+        return getBooksCountByStatus("Returned");
+    }
+
+    public int getLostBooksCount() {
+        return getBooksCountByStatus("Losted");
+    }
+
+    private int getBooksCountByStatus(String status) {
+        String query = "SELECT COUNT(*) AS count FROM borrowedCopies WHERE borrowedCopy_status = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, status);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                return resultSet.getInt("count");
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la récupération des statistiques des livres : " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+    public static void displayStatisticsMenu(LoanController loanController) {
+        boolean exitStatisticsMenu = false;
+
+        while (!exitStatisticsMenu) {
+            System.out.println("Menu des statistiques :");
+            System.out.println("1. Statistiques des livres disponibles");
+            System.out.println("2. Statistiques des livres empruntés");
+            System.out.println("3. Statistiques des livres retournés");
+            System.out.println("4. Statistiques des livres perdus");
+            System.out.println("5. Retourner au menu principal");
+
+            System.out.print("Choisissez une option : ");
+            Scanner scanner = new Scanner(System.in);
+            int statisticsChoice = scanner.nextInt();
+
+            switch (statisticsChoice) {
+                case 1:
+                    displayStatistics(loanController, "Livres disponibles", loanController.getAvailableBooksCount());
+                    break;
+                case 2:
+                    displayStatistics(loanController, "Livres empruntés", loanController.getBorrowedBooksCount());
+                    break;
+                case 3:
+                    displayStatistics(loanController, "Livres retournés", loanController.getReturnedBooksCount());
+                    break;
+                case 4:
+                    displayStatistics(loanController, "Livres perdus", loanController.getLostBooksCount());
+                    break;
+                case 5:
+                    exitStatisticsMenu = true;
+                    break;
+                default:
+                    System.out.println("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        }
+    }
+
+    private static void displayStatistics(LoanController loanController, String category, int count) {
+        System.out.println("Statistiques pour " + category + " : " + count + " livres.");
+    }
+
 
 
 

@@ -14,6 +14,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import static controllers.LoanController.displayStatisticsMenu;
+
 public class LibraryManagementApp {
     public static void main(String[] args) {
         DatabaseConnector dbConnector = new DatabaseConnector("jdbc:mysql://localhost:3306/library_management", "root", "");
@@ -46,7 +48,8 @@ public class LibraryManagementApp {
                     System.out.println("13. Emprunter un livre");
                     System.out.println("14. Afficher Les details des livres Empruntés ");
                     System.out.println("15. Retourner un livre ");
-                    System.out.println("16. Quitter");
+                    System.out.println("16. Générer Un rapport des statistiques ");
+                    System.out.println("17. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -400,13 +403,16 @@ public class LibraryManagementApp {
                             }
                             break;
                         case 16:
+                            displayStatisticsMenu(LoanController);
+                            break;
+                        case 17:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 16);
+                }  while (choice != 17);
 
             } catch (Exception e) {
                 e.printStackTrace();
