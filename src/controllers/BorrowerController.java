@@ -75,7 +75,6 @@ public class BorrowerController {
         }
         return borrowers;
     }
-
     public void updateBorrower(int memberNumber, String newLastName, String newFirstName, String newEmail, String newTelephone, String newCIN) throws SQLException {
         // Construction dynamique de la requête SQL
         StringBuilder queryBuilder = new StringBuilder("UPDATE borrowers SET ");
@@ -147,20 +146,29 @@ public class BorrowerController {
     }
 
 
-    private boolean doesBorrowerExist(int borrowerId) throws SQLException {
-        String query = "SELECT COUNT(*) FROM borrowers WHERE borrower_id = ?";
+    public Borrower searchBorrowerByMemberNumber(int numeroMembre) throws SQLException {
+        String query = "SELECT * FROM borrowers WHERE member_number = ?";
+
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, borrowerId);
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    int count = resultSet.getInt(1);
-                    return count > 0;
-                }
+            statement.setInt(1, numeroMembre);
+            ResultSet resultSet = statement.executeQuery();
+
+            if (resultSet.next()) {
+                int borrowerId = resultSet.getInt("borrower_id");
+                String lastName = resultSet.getString("borrower_lastName");
+                String firstName = resultSet.getString("borrower_firstName");
+                String email = resultSet.getString("borrower_email");
+                String telephone = resultSet.getString("borrower_telephone");
+                String CIN = resultSet.getString("borrower_CIN");
+
+                // Créez et retournez un objet Borrower
+                return new Borrower(borrowerId, lastName, firstName, email, telephone, CIN, numeroMembre);
             }
         }
-        return false;
-    }
 
+        // Si aucun emprunteur n'a été trouvé, renvoyez null
+        return null;
+    }
 
 
 }

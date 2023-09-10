@@ -1,12 +1,16 @@
 import controllers.AuthorController;
 import controllers.BookController;
 import controllers.BorrowerController;
+import controllers.LoanController;
 import models.Author;
 import models.Book;
 import models.Borrower;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -20,6 +24,7 @@ public class LibraryManagementApp {
             AuthorController authorController = new AuthorController(dbConnector.getConnection());
             BookController bookController = new BookController(dbConnector.getConnection(), authorController);
             BorrowerController BorrowerController = new BorrowerController(dbConnector.getConnection());
+            LoanController LoanController = new LoanController(dbConnector.getConnection());
 
             try {
                 Scanner scanner = new Scanner(System.in);
@@ -38,7 +43,8 @@ public class LibraryManagementApp {
                     System.out.println("10. Ajouter un Emprunteur");
                     System.out.println("11. Afficher les Emprunteurs");
                     System.out.println("12. Modifier les informations d'un emprunteur");
-                    System.out.println("13. Quitter");
+                    System.out.println("13. Emprunter un livre");
+                    System.out.println("14. Quitter");
                     System.out.print("Choisissez une option : ");
 
                     choice = scanner.nextInt();
@@ -298,13 +304,73 @@ public class LibraryManagementApp {
                             }
                             break;
                         case 13:
+                            System.out.println("Emprunter un livre :");
+
+                            int numeroMembre = -1;
+                            String memberLastName = "";
+                            String memberFirstName = "";
+                            String memberEmail = "";
+                            String memberTelephone = "";
+                            String memberCIN = "";
+
+                            if (numeroMembre == -1) {
+                                System.out.println("Vous devez être membre pour emprunter un livre.");
+                                System.out.println("Êtes-vous déjà membre de la bibliothèque ? (oui/non)");
+                                String reponse = scanner.nextLine().toLowerCase();
+
+                                if (reponse.equals("oui")) {
+                                    System.out.print("Entrez votre numéro de membre : ");
+                                    numeroMembre = scanner.nextInt();
+                                    scanner.nextLine();
+                                } else if (reponse.equals("non")) {
+                                    System.out.print("Entrez votre nom de famille : ");
+                                    memberLastName = scanner.nextLine();
+                                    System.out.print("Entrez votre prénom : ");
+                                    memberFirstName = scanner.nextLine();
+                                    System.out.print("Entrez votre email : ");
+                                    memberEmail = scanner.nextLine();
+                                    System.out.print("Entrez votre numéro de téléphone : ");
+                                    memberTelephone = scanner.nextLine();
+                                    System.out.print("Entrez votre CIN : ");
+                                    memberCIN = scanner.nextLine();
+                                    System.out.print("Entrez un numéro de membre unique : ");
+                                    numeroMembre = scanner.nextInt();
+                                    scanner.nextLine();
+
+                                    BorrowerController.addBorrower(memberLastName, memberFirstName, memberEmail, memberTelephone, memberCIN, numeroMembre);
+                                    System.out.println("Vous êtes désormais membre de la bibliothèque. Vous pouvez emprunter un livre.");
+                                } else {
+                                    System.out.println("Réponse invalide. Veuillez répondre par 'oui' ou 'non'.");
+                                    break;
+                                }
+                            }
+
+                            System.out.print("Entrez l'ISBN ou le titre du livre que vous souhaitez emprunter : ");
+                            String isbnOuTitre = scanner.nextLine();
+                            System.out.print("Entrez la date d'emprunt (AAAA-MM-JJ) : ");
+                            String dateEmpruntStr = scanner.nextLine();
+                            System.out.print("Entrez la date de retour prévue (AAAA-MM-JJ) : ");
+                            String dateRetourStr = scanner.nextLine();
+
+                            try {
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                                Date dateEmprunt = dateFormat.parse(dateEmpruntStr);
+                                Date dateRetour = dateFormat.parse(dateRetourStr);
+
+                                LoanController.borrowBook(isbnOuTitre, numeroMembre, dateEmprunt, dateRetour);
+                            } catch (ParseException e) {
+                                System.out.println("Format de date invalide. Assurez-vous d'utiliser le format AAAA-MM-JJ.");
+                            }
+                           
+                            break;
+                        case 14:
                             System.out.println("Fin du programme.");
                             break;
                         default:
                             System.out.println("Option invalide. Veuillez choisir une option valide.");
                             break;
                     }
-                }  while (choice != 13);
+                }  while (choice != 14);
 
             } catch (Exception e) {
                 e.printStackTrace();
