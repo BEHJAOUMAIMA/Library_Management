@@ -33,3 +33,38 @@ WHERE l.return_date < NOW();
 END;
 
 
+
+
+CREATE TRIGGER update_book_state_after_insert
+    AFTER INSERT ON borrowedCopies
+    FOR EACH ROW
+BEGIN
+    DECLARE bookQuantity INT;
+
+    SELECT book_quantity INTO bookQuantity
+    FROM books
+    WHERE book_id = NEW.book_id;
+
+    IF bookQuantity = 0 THEN
+    UPDATE books
+    SET book_state = 'indisponible'
+    WHERE book_id = NEW.book_id;
+END IF;
+END;
+
+CREATE TRIGGER update_book_state_after_book_update
+    AFTER UPDATE ON books
+    FOR EACH ROW
+BEGIN
+    DECLARE newBookState VARCHAR(255);
+
+    IF NEW.book_quantity = 0 THEN
+        SET newBookState = 'indisponible';
+    ELSE
+        SET newBookState = 'disponible';
+END IF;
+
+UPDATE books
+SET book_state = newBookState
+WHERE book_id = NEW.book_id;
+END;

@@ -314,6 +314,26 @@ public class BookController {
             System.err.println("Erreur lors de la mise à jour de l'état du livre : " + e.getMessage());
         }
     }
+    public void updateBookStateBasedOnQuantity() {
+        try {
+            String sqlUpdateAvailableBooks = "UPDATE books SET book_state = 'disponible' WHERE book_quantity > 0";
+
+            String sqlUpdateUnavailableBooks = "UPDATE books SET book_state = 'indisponible' WHERE book_quantity = 0";
+
+            PreparedStatement preparedStatementAvailable = connection.prepareStatement(sqlUpdateAvailableBooks);
+
+            PreparedStatement preparedStatementUnavailable = connection.prepareStatement(sqlUpdateUnavailableBooks);
+
+            int availableBooksUpdated = preparedStatementAvailable.executeUpdate();
+
+            int unavailableBooksUpdated = preparedStatementUnavailable.executeUpdate();
+
+            preparedStatementAvailable.close();
+            preparedStatementUnavailable.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
 

@@ -27,6 +27,7 @@ public class LibraryManagementApp {
             BookController bookController = new BookController(dbConnector.getConnection(), authorController);
             BorrowerController BorrowerController = new BorrowerController(dbConnector.getConnection());
             LoanController LoanController = new LoanController(dbConnector.getConnection());
+            bookController.updateBookStateBasedOnQuantity();
 
             try {
                 Scanner scanner = new Scanner(System.in);
