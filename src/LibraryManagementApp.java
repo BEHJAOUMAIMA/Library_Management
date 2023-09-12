@@ -5,7 +5,6 @@ import controllers.LoanController;
 import models.Author;
 import models.Book;
 import models.Borrower;
-
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -16,7 +15,7 @@ import java.util.Scanner;
 
 import static controllers.LoanController.displayStatisticsMenu;
 
-public class LibraryManagementApp {
+/*public class LibraryManagementApp {
     public static void main(String[] args) {
         DatabaseConnector dbConnector = new DatabaseConnector("jdbc:mysql://localhost:3306/library_management", "root", "");
 
@@ -423,5 +422,534 @@ public class LibraryManagementApp {
         } else {
             System.err.println("Échec de la connexion à la base de données.");
         }
+    }
+}*/
+public class LibraryManagementApp {
+    public static void main(String[] args) {
+        DatabaseConnector dbConnector = new DatabaseConnector("jdbc:mysql://localhost:3306/library_management", "root", "");
+
+        if (dbConnector.connect()) {
+            System.out.println("Connexion réussie à la base de données.");
+
+            AuthorController authorController = new AuthorController(dbConnector.getConnection());
+            BookController bookController = new BookController(dbConnector.getConnection(), authorController);
+            BorrowerController BorrowerController = new BorrowerController(dbConnector.getConnection());
+            LoanController LoanController = new LoanController(dbConnector.getConnection());
+            bookController.updateBookStateBasedOnQuantity();
+
+            try {
+                Scanner scanner = new Scanner(System.in);
+                int choice;
+                do {
+                    displayMainMenu();
+                    choice = scanner.nextInt();
+                    scanner.nextLine();
+
+                    switch (choice) {
+                        case 1:
+                            AuthorMenu.handleAuthorMenu(authorController, scanner);
+                            break;
+                        case 2:
+                            BookMenu.handleBookMenu(bookController, authorController, scanner);
+                            break;
+                        case 3:
+                            BorrowerMenu.handleBorrowerMenu(BorrowerController, scanner);
+                            break;
+                        case 4:
+                            LoanMenu.handleLoanMenu(LoanController, BorrowerController, bookController, scanner);
+                            break;
+                        case 5:
+                            System.out.println("Fin du programme.");
+                            break;
+                        default:
+                            System.out.println("Option invalide. Veuillez choisir une option valide.");
+                            break;
+                    }
+                } while (choice != 5);
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                dbConnector.disconnect();
+            }
+        } else {
+            System.err.println("Échec de la connexion à la base de données.");
+        }
+    }
+
+    private static void displayMainMenu() {
+        System.out.println("Menu Principal:");
+        System.out.println("1. Gérer les auteurs");
+        System.out.println("2. Gérer les livres");
+        System.out.println("3. Gérer les emprunteurs");
+        System.out.println("4. Gérer les prêts");
+        System.out.println("5. Autres options de menu");
+        System.out.println("6. Autres options de menu");
+        System.out.println("7. Quitter");
+        System.out.print("Choisissez une option : ");
+    }
+}
+
+class AuthorMenu {
+    public static void handleAuthorMenu(AuthorController authorController, Scanner scanner) {
+        int choice;
+        do {
+            displayAuthorMenu();
+            choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Entrez le nom complet de l'auteur :");
+                    String fullName = scanner.nextLine();
+                    System.out.println("Entrez la biographie de l'auteur :");
+                    String bio = scanner.nextLine();
+                    try {
+                        authorController.addAuthor(fullName, bio);
+                        System.out.println("L'auteur a été ajouté avec succès !");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 2:
+                    try {
+                        List<Author> authors = authorController.getAllAuthors();
+                        for (Author author : authors) {
+                            System.out.println("ID : " + author.getAuthorId() + ", Nom complet : " + author.getAuthorFullName() + ", Bio : " + author.getAuthorBio());
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 3:
+                    System.out.println("Entrez l'ID de l'auteur que vous souhaitez mettre à jour :");
+                    int authorIdToUpdate = scanner.nextInt();
+                    scanner.nextLine();
+
+                    System.out.println("Entrez le nouveau nom complet de l'auteur :");
+                    String newFullName = scanner.nextLine();
+
+                    System.out.println("Entrez la nouvelle biographie de l'auteur :");
+                    String newBio = scanner.nextLine();
+
+                    try {
+                        authorController.updateAuthor(authorIdToUpdate, newFullName, newBio);
+                        System.out.println("L'auteur a été mis à jour avec succès !");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 4:
+                    System.out.println("Entrez l'ID de l'auteur que vous souhaitez supprimer :");
+                    int authorIdToDelete = scanner.nextInt();
+
+                    try {
+                        authorController.deleteAuthor(authorIdToDelete);
+                        System.out.println("L'auteur a été supprimé avec succès !");
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        } while (true);
+    }
+
+
+    private static void displayAuthorMenu() {
+        System.out.println("Menu Auteur :");
+        System.out.println("1. Ajouter un auteur");
+        System.out.println("2. Afficher tous les auteurs");
+        System.out.println("3. Mettre à jour un auteur");
+        System.out.println("4. Supprimer un auteur");
+        System.out.println("5. Retourner au menu principal");
+        System.out.print("Choisissez une option : ");
+    }
+}
+
+class BookMenu {
+    public static void handleBookMenu(BookController bookController, AuthorController authorController, Scanner scanner) throws SQLException {
+        int choice;
+        do {
+            displayBookMenu();
+            choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Ajouter un livre :");
+                    List<Author> authors = authorController.getAllAuthors();
+                    System.out.println("Liste des auteurs disponibles :");
+
+                    for (int i = 0; i < authors.size(); i++) {
+                        System.out.println((i + 1) + ". " + authors.get(i).getAuthorFullName());
+                    }
+
+                    System.out.println("Entrez le numéro de l'auteur ou 0 pour créer un nouvel auteur :");
+                    int authorChoice = scanner.nextInt();
+                    scanner.nextLine();
+
+                    Author author;
+
+                    if (authorChoice == 0) {
+                        System.out.println("Entrez le nom complet de l'auteur :");
+                        String authorFullName = scanner.nextLine();
+                        System.out.println("Entrez la biographie de l'auteur :");
+                        String authorBio = scanner.nextLine();
+
+                        authorController.addAuthor(authorFullName, authorBio);
+
+                        author = authorController.getAuthorByFullName(authorFullName);
+                    } else if (authorChoice > 0 && authorChoice <= authors.size()) {
+                        author = authors.get(authorChoice - 1);
+                    } else {
+                        System.out.println("Choix invalide. Veuillez choisir un numéro d'auteur valide.");
+                        continue;
+                    }
+
+                    System.out.println("Entrez le titre du livre :");
+                    String bookTitle = scanner.nextLine();
+                    System.out.println("Entrez la description du livre :");
+                    String bookDescription = scanner.nextLine();
+                    System.out.println("Entrez l'ISBN du livre :");
+                    int bookISBN = scanner.nextInt();
+                    scanner.nextLine();
+                    System.out.println("Entrez la quantité du livre :");
+                    int bookQuantity = scanner.nextInt();
+                    scanner.nextLine();
+
+                    String bookState = "disponible";
+                    bookController.addBook(bookTitle, bookDescription, bookISBN, bookQuantity, bookState, author);
+                    break;
+                case 2:
+                    try {
+                        List<Book> availableBooks = bookController.getAllAvailableBooks();
+
+                        if (availableBooks.isEmpty()) {
+                            System.out.println("Aucun livre disponible.");
+                        } else {
+                            System.out.println("Livres disponibles :");
+                            for (Book book : availableBooks) {
+                                System.out.println("Titre : " + book.getBookTitle());
+                                System.out.println("Description : " + book.getBookDescription());
+                                System.out.println("ISBN : " + book.getBookISBN());
+                                System.out.println("Quantité : " + book.getBookQuantity());
+                                System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                System.out.println();
+                            }
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 3:
+                    System.out.println("Recherche de livres par titre ou auteur :");
+                    do {
+                        System.out.print("Entrez le titre ou le nom de l'auteur : ");
+                        String searchTerm = scanner.nextLine();
+
+                        List<Book> matchingBooks = bookController.searchBooks(searchTerm);
+
+                        if (matchingBooks == null) {
+                            System.out.println("Aucun résultat trouvé pour la recherche : " + searchTerm);
+                            System.out.println("Voulez-vous réessayer ? (oui/non)");
+                            String retryChoice = scanner.nextLine();
+                            if (!retryChoice.equalsIgnoreCase("oui")) {
+                                break;
+                            }
+                        } else {
+                            if (searchTerm.equalsIgnoreCase(searchTerm)) {
+                                System.out.println("Livres de l'auteur " + searchTerm + " :");
+                                for (Book book : matchingBooks) {
+                                    System.out.println("Titre : " + book.getBookTitle());
+                                    System.out.println("Description : " + book.getBookDescription());
+                                    System.out.println("ISBN : " + book.getBookISBN());
+                                    System.out.println("Quantité : " + book.getBookQuantity());
+                                    System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                    System.out.println();
+                                }
+                            } else {
+                                System.out.println("Livres correspondants :");
+                                for (Book book : matchingBooks) {
+                                    System.out.println("Titre : " + book.getBookTitle());
+                                    System.out.println("Description : " + book.getBookDescription());
+                                    System.out.println("ISBN : " + book.getBookISBN());
+                                    System.out.println("Quantité : " + book.getBookQuantity());
+                                    System.out.println("Auteur : " + book.getBookAuthor().getAuthorFullName());
+                                    System.out.println();
+                                }
+                            }
+
+                            System.out.println("Voulez-vous réessayer ? (oui/non)");
+                            String retryChoice = scanner.nextLine();
+                            if (!retryChoice.equalsIgnoreCase("oui")) {
+                                break;
+                            }
+                        }
+                    } while (true);
+                    break;
+                case 4:
+                    System.out.println("Mettre à jour un livre :");
+                    System.out.println("Entrez l'ISBN du livre que vous souhaitez mettre à jour :");
+                    int updateISBN = scanner.nextInt();
+                    scanner.nextLine();
+
+                    bookController.updateBook(updateISBN);
+                    break;
+                case 5:
+                    System.out.println("Supprimer un Livre :");
+                    System.out.println("Entrez l'ISBN du livre que vous souhaitez supprimé :");
+                    int deleteISBN = scanner.nextInt();
+                    scanner.nextLine();
+
+                    bookController.deleteBook(deleteISBN);
+                    break;
+                case 6:
+                    return;
+                default:
+                    System.out.println("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        } while (true);
+    }
+
+    private static void displayBookMenu() {
+        System.out.println("Menu Livre :");
+        System.out.println("1. Ajouter un livre");
+        System.out.println("2. Afficher les livres disponibles");
+        System.out.println("3. Rechercher un livre");
+        System.out.println("4. Modifier un livre");
+        System.out.println("5. Supprimer un livre");
+        System.out.println("6. Retourner au menu principal");
+        System.out.print("Choisissez une option : ");
+    }
+}
+
+class BorrowerMenu {
+    public static void handleBorrowerMenu(BorrowerController borrowerController, Scanner scanner) throws SQLException {
+        int choice;
+        do {
+            displayBorrowerMenu();
+            choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Ajouter un emprunteur :");
+                    String lastName, firstName, email, telephone, CIN;
+                    int memberNumber;
+                    do {
+                        System.out.println("Numéro de membre (doit être unique) : ");
+                        memberNumber = scanner.nextInt();
+                        scanner.nextLine();
+                        if (borrowerController.isMemberNumberUnique(memberNumber)) {
+                            break;
+                        } else {
+                            System.out.println("Ce numéro de membre existe déjà. Veuillez en choisir un autre.");
+                        }
+                    } while (true);
+
+                    System.out.println("Nom de famille : ");
+                    lastName = scanner.nextLine();
+                    System.out.println("Prénom : ");
+                    firstName = scanner.nextLine();
+                    System.out.println("Email : ");
+                    email = scanner.nextLine();
+                    System.out.println("Téléphone : ");
+                    telephone = scanner.nextLine();
+                    System.out.println("CIN : ");
+                    CIN = scanner.nextLine();
+
+                    borrowerController.addBorrower(lastName, firstName, email, telephone, CIN, memberNumber);
+                    break;
+                case 2:
+                    try {
+                        List<Borrower> borrowers = borrowerController.getAllBorrowers();
+
+                        if (borrowers.isEmpty()) {
+                            System.out.println("Aucun emprunteur enregistré.");
+                        } else {
+                            System.out.println("Liste des emprunteurs :");
+                            for (Borrower borrower : borrowers) {
+                                System.out.println("ID : " + borrower.getBorrowerId());
+                                System.out.println("Nom : " + borrower.getBorrowerLastName());
+                                System.out.println("Prénom : " + borrower.getBorrowerFirstName());
+                                System.out.println("Email : " + borrower.getBorrowerEmail());
+                                System.out.println("Téléphone : " + borrower.getBorrowerTelephone());
+                                System.out.println("CIN : " + borrower.getBorrowerCIN());
+                                System.out.println("Numéro de membre : " + borrower.getMemberNumber());
+                                System.out.println();
+                            }
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 3:
+                    System.out.print("Entrez le numéro de membre de l'emprunteur que vous souhaitez mettre à jour : ");
+                    int memberNumberToUpdate = scanner.nextInt();
+                    scanner.nextLine();
+
+                    System.out.print("Nouveau nom de famille (laissez vide pour conserver la valeur actuelle) : ");
+                    String newLastName = scanner.nextLine();
+                    System.out.print("Nouveau prénom (laissez vide pour conserver la valeur actuelle) : ");
+                    String newFirstName = scanner.nextLine();
+                    System.out.print("Nouvelle adresse e-mail (laissez vide pour conserver la valeur actuelle) : ");
+                    String newEmail = scanner.nextLine();
+                    System.out.print("Nouveau numéro de téléphone (laissez vide pour conserver la valeur actuelle) : ");
+                    String newTelephone = scanner.nextLine();
+                    System.out.print("Nouveau CIN (laissez vide pour conserver la valeur actuelle) : ");
+                    String newCIN = scanner.nextLine();
+
+                    try {
+                        borrowerController.updateBorrower(memberNumberToUpdate, newLastName, newFirstName, newEmail, newTelephone, newCIN);
+                    } catch (SQLException e) {
+                        System.err.println("Erreur lors de la mise à jour de l'emprunteur : " + e.getMessage());
+                    }
+                    break;
+                case 4:
+                    return;
+                default:
+                    System.out.println("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        } while (true);
+    }
+
+    private static void displayBorrowerMenu() {
+        System.out.println("Menu Emprunteur :");
+        System.out.println("1. Ajouter un emprunteur");
+        System.out.println("2. Afficher les emprunteurs");
+        System.out.println("3. Modifier les informations d'un emprunteur");
+        System.out.println("4. Retourner au menu principal");
+        System.out.print("Choisissez une option : ");
+    }
+}
+
+class LoanMenu {
+    public static void handleLoanMenu(LoanController loanController, BorrowerController borrowerController, BookController bookController, Scanner scanner) throws SQLException {
+        int choice;
+        do {
+            displayLoanMenu();
+            choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1:
+                    System.out.println("Emprunter un livre :");
+
+                    int numeroMembre = -1;
+                    String memberLastName = "";
+                    String memberFirstName = "";
+                    String memberEmail = "";
+                    String memberTelephone = "";
+                    String memberCIN = "";
+
+                    if (numeroMembre == -1) {
+                        System.out.println("Vous devez être membre pour emprunter un livre.");
+                        System.out.println("Êtes-vous déjà membre de la bibliothèque ? (oui/non)");
+                        String reponse = scanner.nextLine().toLowerCase();
+
+                        if (reponse.equals("oui")) {
+                            System.out.print("Entrez votre numéro de membre : ");
+                            numeroMembre = scanner.nextInt();
+                            scanner.nextLine();
+                        } else if (reponse.equals("non")) {
+                            System.out.print("Entrez votre nom de famille : ");
+                            memberLastName = scanner.nextLine();
+                            System.out.print("Entrez votre prénom : ");
+                            memberFirstName = scanner.nextLine();
+                            System.out.print("Entrez votre email : ");
+                            memberEmail = scanner.nextLine();
+                            System.out.print("Entrez votre numéro de téléphone : ");
+                            memberTelephone = scanner.nextLine();
+                            System.out.print("Entrez votre CIN : ");
+                            memberCIN = scanner.nextLine();
+                            System.out.print("Entrez un numéro de membre unique : ");
+                            numeroMembre = scanner.nextInt();
+                            scanner.nextLine();
+
+                            borrowerController.addBorrower(memberLastName, memberFirstName, memberEmail, memberTelephone, memberCIN, numeroMembre);
+                            System.out.println("Vous êtes désormais membre de la bibliothèque. Vous pouvez emprunter un livre.");
+                        } else {
+                            System.out.println("Réponse invalide. Veuillez répondre par 'oui' ou 'non'.");
+                            break;
+                        }
+                    }
+
+                    System.out.print("Entrez l'ISBN ou le titre du livre que vous souhaitez emprunter : ");
+                    String isbnOuTitre = scanner.nextLine();
+                    System.out.print("Entrez la date d'emprunt (AAAA-MM-JJ) : ");
+                    String dateEmpruntStr = scanner.nextLine();
+                    System.out.print("Entrez la date de retour prévue (AAAA-MM-JJ) : ");
+                    String dateRetourStr = scanner.nextLine();
+
+                    try {
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                        Date dateEmprunt = dateFormat.parse(dateEmpruntStr);
+                        Date dateRetour = dateFormat.parse(dateRetourStr);
+
+                        loanController.borrowBook(isbnOuTitre, numeroMembre, dateEmprunt, dateRetour);
+                    } catch (ParseException e) {
+                        System.out.println("Format de date invalide. Assurez-vous d'utiliser le format AAAA-MM-JJ.");
+                    }
+                    break;
+                case 2:
+                    List<String> borrowedBooksDetails = loanController.getBorrowedBooksDetails();
+
+                    if (borrowedBooksDetails.isEmpty()) {
+                        System.out.println("Aucun livre emprunté pour le moment.");
+                    } else {
+                        System.out.println("Livres empruntés avec les informations des emprunteurs :");
+                        for (String details : borrowedBooksDetails) {
+                            System.out.println(details);
+                        }
+                    }
+                    break;
+                case 3:
+                    System.out.print("Entrez l'ISBN du livre que vous souhaitez retourner : ");
+                    int isbnToReturn = scanner.nextInt();
+                    scanner.nextLine();
+
+                    System.out.print("Entrez le numéro de membre de l'emprunteur : ");
+                    int memberNumber = scanner.nextInt();
+                    scanner.nextLine();
+
+                    try {
+                        boolean success = loanController.returnBorrowedBook(isbnToReturn, memberNumber);
+
+                        if (success) {
+                            System.out.println("Le livre a été retourné avec succès.");
+                        } else {
+                            System.out.println("Échec du retour du livre. Vérifiez l'ISBN ou le numéro de membre.");
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Erreur lors du retour du livre : " + e.getMessage());
+                        e.printStackTrace();
+                    }
+                    break;
+                case 4:
+                    displayStatisticsMenu(loanController);
+                    break;
+                case 5:
+                    return;
+                default:
+                    System.out.println("Option invalide. Veuillez choisir une option valide.");
+                    break;
+            }
+        } while (true);
+    }
+
+    private static void displayLoanMenu() {
+        System.out.println("Menu Prêt :");
+        System.out.println("1. Emprunter un livre");
+        System.out.println("2. Afficher les détails des livres empruntés");
+        System.out.println("3. Retourner un livre");
+        System.out.println("4. Générer un rapport des statistiques");
+        System.out.println("5. Retourner au menu principal");
+        System.out.print("Choisissez une option : ");
     }
 }
